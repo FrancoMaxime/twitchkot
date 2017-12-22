@@ -7,14 +7,13 @@ import threading
 
 render = web.template.render('templates/', base='layout')
 nameplayer = "livestreamer"
-
+player = None
 
 urls = (
     '/', 'Index',
     '/index', 'Index',
 )
 
-player = None
 
 class Index:
 
@@ -23,6 +22,7 @@ class Index:
         return render.index(name)
 
     def POST(self):
+        global player
         data = web.input(placeImg={})
         method = data.get("method", "malformed")
         if 'channel' in data :
