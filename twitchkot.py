@@ -7,6 +7,8 @@ import threading
 
 render = web.template.render('templates/', base='layout')
 nameplayer = "livestreamer"
+omxplayer = "\"omxplayer --adev local --win '35 35 1885 1045'\""
+#omxplayer = "vlc"
 player = None
 
 urls = (
@@ -18,8 +20,7 @@ urls = (
 class Index:
 
     def GET(self):
-        name = 'bob'
-        return render.index(name)
+        return render.index()
 
     def POST(self):
         global player
@@ -30,9 +31,10 @@ class Index:
             if player == None :
                 player = PlayerThread(channel)
             else:
-                player.stop()
+                stop_watching()
                 player.channel = channel
-            player.run()
+        render.index()
+        return player.run()
 
 
 
@@ -41,15 +43,20 @@ class PlayerThread(threading.Thread):
     def __init__(self,channel):
         threading.Thread.__init__(self)
         self.channel = channel
+        self.running = False
 
 
     def run(self):
-        command = "livestreamer -np \"omxplayer --adev local --win '35 35 1885 1045'\" --twitch-oauth-token 9g056yigicng5hgsonbakyl0ede3fd twitch.tv/"
+        self.running = True
+        command = "livestreamer -np " + omxplayer + " --twitch-oauth-token 9g056yigicng5hgsonbakyl0ede3fd twitch.tv/"
         command = command + self.channel + " best"
         os.system(command)
 
-    def stop(self):
-        pids= map(int, subprocess.check_output(["pidof", nameplayer]).split())
+
+def stop_watching():
+    if player.running :
+        player.running = False
+        pids= map(int, subprocess.check_output(["pidof", omxplayer.split(' ')[0]]).split())
         for pid in pids:
             os.kill(pid, signal.SIGKILL)
 
